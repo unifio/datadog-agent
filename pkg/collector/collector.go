@@ -26,6 +26,7 @@ type Collector struct {
 	checks    map[check.ID]check.Check
 	state     uint32
 	m         sync.RWMutex
+	loader    *ConfigLoader
 }
 
 // NewCollector create a Collector instance and sets up the Python Environment
@@ -34,16 +35,42 @@ func NewCollector(paths ...string) *Collector {
 	sched := scheduler.NewScheduler(run.GetChan())
 	sched.Run()
 
-	// Send the agent startup event
-	// TODO
+	startQ := make(chan check.Check)
+	stopQ := make(chan check.ID)
+	stopWork := make(chan bool)
 
-	return &Collector{
+	c := &Collector{
 		scheduler: sched,
 		runner:    run,
 		pyState:   py.Initialize(paths...),
 		checks:    make(map[check.ID]check.Check),
 		state:     started,
+		loader:    loader.NewConfigLoader(startQ, stopQ),
 	}
+
+	// TODO: Send the agent startup event
+
+	go func() {
+		for {
+			select {
+			case <-stopWork:
+				log.Info("Received stop command, shutting down...")
+				return
+			case checkID := <-stopQ:
+				err = c.StopCheck(checkID)
+				if err != nil {
+					log.Errorf("an error occurred while stopping the check: %s", err)
+				}
+			case check := <-startQ:
+				err = c.RunCheck(check)
+				if err != nil {
+					log.Errorf("an error occurred while scheduling the check: %s", err)
+				}
+			}
+		}
+	}()
+
+	return c
 }
 
 // Stop halts any component involved in running a Check and shuts down
