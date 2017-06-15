@@ -10,11 +10,26 @@ import (
 	"os"
 
 	"github.com/DataDog/datadog-agent/cmd/agent/app"
+	"github.com/DataDog/datadog-agent/pkg/util/k8s"
 )
 
 func main() {
 	// go_expvar server
 	go http.ListenAndServe("127.0.0.1:5000", http.DefaultServeMux)
+
+	kubeUtil, err := k8s.NewKubeUtil()
+	if err != nil {
+		fmt.Println("Err NewKubeUtil: ", err)
+	}
+
+	ip, name, err := kubeUtil.GetNodeInfo()
+	if err != nil {
+		fmt.Println("Err GetNodeInfo: ", err)
+	} else {
+		fmt.Println("ip: ", ip, "; name: ", name)
+	}
+
+	os.Exit(0)
 
 	// Invoke the Agent
 	if err := app.AgentCmd.Execute(); err != nil {
