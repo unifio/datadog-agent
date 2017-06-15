@@ -20,6 +20,21 @@ func main() {
 	kubeUtil, err := k8s.NewKubeUtil()
 	if err != nil {
 		fmt.Println("Err NewKubeUtil: ", err)
+		os.Exit(-1)
+	}
+
+	data, err := k8s.PerformKubeletQuery("192.168.99.100:10255/pods")
+	if err != nil {
+		fmt.Println("Err GetNodeInfo: ", err)
+	} else {
+		fmt.Printf("pods: %s", data)
+	}
+
+	podList, err := kubeUtil.GetLocalPodList()
+	if err != nil {
+		fmt.Println("Err GetNodeInfo: ", err)
+	} else {
+		fmt.Printf("podList: %+v", podList)
 	}
 
 	ip, name, err := kubeUtil.GetNodeInfo()
