@@ -96,14 +96,14 @@ func GetGlobalPodList() ([]*v1.Pod, error) {
 }
 
 // GetLocalPodList returns the list of pods running on the node where this pod is running
-func (ku *KubeUtil) GetLocalPodList() ([]*pod, error) {
+func (ku *KubeUtil) GetLocalPodList() ([]*Pod, error) {
 
 	data, err := PerformKubeletQuery(fmt.Sprintf("%s/pods", ku.kubeletAPIURL))
 	if err != nil {
 		return nil, fmt.Errorf("Error performing kubelet query: %s", err)
 	}
 
-	v := new(podList)
+	v := new(PodList)
 	if err := json.Unmarshal(data, v); err != nil {
 		return nil, fmt.Errorf("Error unmarshalling json: %s", err)
 	}
