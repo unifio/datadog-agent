@@ -71,7 +71,7 @@ func (ku *KubeUtil) GetNodeInfo() (ip, name string, err error) {
 	}
 
 	for _, pod := range pods {
-		if !pod.Spec.HostNetwork {
+		if pod.Spec.HostNetwork != "" {
 			return pod.Status.HostIP, pod.Spec.Hostname, nil
 		}
 	}
