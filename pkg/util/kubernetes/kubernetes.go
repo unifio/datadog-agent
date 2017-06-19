@@ -34,7 +34,7 @@ type PodList struct {
 
 // Spec contains fields for unmarshalling a PodSpec
 type Spec struct {
-	HostNetwork string `json:"hostNetwork,omitempty"`
+	HostNetwork bool   `json:"hostNetwork,omitempty"`
 	Hostname    string `json:"hostname,omitempty"`
 }
 
@@ -71,7 +71,7 @@ func (ku *KubeUtil) GetNodeInfo() (ip, name string, err error) {
 	}
 
 	for _, pod := range pods {
-		if pod.Spec.HostNetwork != "" {
+		if !pod.Spec.HostNetwork {
 			return pod.Status.HostIP, pod.Spec.Hostname, nil
 		}
 	}
