@@ -10,7 +10,7 @@ import (
 	"os"
 
 	"github.com/DataDog/datadog-agent/cmd/agent/app"
-	"github.com/DataDog/datadog-agent/pkg/util/k8s"
+	k8s "github.com/DataDog/datadog-agent/pkg/util/kubernetes"
 )
 
 func main() {
