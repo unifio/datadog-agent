@@ -29,7 +29,6 @@ type UDSListener struct {
 	conn            *net.UnixConn
 	packetOut       chan *Packet
 	oobSize         int
-	Started         bool
 	OriginDetection bool
 }
 
@@ -60,7 +59,6 @@ func NewUDSListener(packetOut chan *Packet) (*UDSListener, error) {
 	}
 
 	listener := &UDSListener{
-		Started:         false,
 		OriginDetection: originDection,
 		oobSize:         getUDSAncillarySize(),
 		packetOut:       packetOut,
@@ -118,7 +116,6 @@ func (l *UDSListener) Listen() {
 
 // Stop closes the UDS connection and stops listening
 func (l *UDSListener) Stop() {
-	l.Started = false
 	l.conn.Close()
 
 	// Socket cleanup on exit

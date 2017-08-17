@@ -27,7 +27,6 @@ var (
 type UDPListener struct {
 	conn      net.PacketConn
 	packetOut chan *Packet
-	Started   bool
 }
 
 // NewUDPListener returns an idle UDP Statsd listener
@@ -50,7 +49,6 @@ func NewUDPListener(packetOut chan *Packet) (*UDPListener, error) {
 	}
 
 	listener := &UDPListener{
-		Started:   false,
 		packetOut: packetOut,
 		conn:      conn,
 	}
@@ -85,6 +83,5 @@ func (l *UDPListener) Listen() {
 
 // Stop closes the UDP connection and stops listening
 func (l *UDPListener) Stop() {
-	l.Started = false
 	l.conn.Close()
 }
