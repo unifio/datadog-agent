@@ -8,12 +8,24 @@
 package main
 
 import (
+	"bytes"
 	"os"
+	"runtime/pprof"
 
 	"github.com/DataDog/datadog-agent/cmd/agent/app"
+	log "github.com/cihub/seelog"
 )
 
 func main() {
+	defer func() {
+		if e := recover(); e != nil {
+			defer log.Flush()
+			buf := new(bytes.Buffer)
+			pprof.Lookup("goroutine").WriteTo(buf, 1)
+			log.Errorf("Whoopsies! Agent panicked ಥ_ಥ - stacktraces: %s", buf)
+			os.Exit(-1)
+		}
+	}()
 	// Invoke the Agent
 	if err := app.AgentCmd.Execute(); err != nil {
 		os.Exit(-1)
