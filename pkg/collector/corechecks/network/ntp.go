@@ -121,6 +121,8 @@ func (c *NTPCheck) Run() error {
 		return err
 	}
 
+	panic("panic deep!!")
+
 	var serviceCheckStatus metrics.ServiceCheckStatus
 	var clockOffset int
 	serviceCheckMessage := ""
