@@ -191,3 +191,16 @@ func TestGetPortsFromInspect(t *testing.T) {
 	assert.Contains(t, pts, 1234)
 	assert.Contains(t, pts, 4321)
 }
+
+func TestGetPidFromInspect(t *testing.T) {
+	dl := DockerListener{}
+	cBase := types.ContainerJSONBase{
+		State: &types.ContainerState{Pid: 1337},
+	}
+	co := types.ContainerJSON{
+		ContainerJSONBase: &cBase,
+	}
+
+	pid := dl.getPidFromInspect(co)
+	assert.Equal(t, 1337, pid)
+}

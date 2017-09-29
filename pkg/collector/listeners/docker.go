@@ -361,3 +361,35 @@ func (s *DockerService) GetPid() (int, error) {
 
 	return s.Pid, nil
 }
+
+// GetHosts returns the container's hosts
+func (s *DockerService) GetHosts() (map[string]string, error) {
+	return map[string]string{}, nil
+}
+
+// GetPorts returns the container's ports
+func (s *DockerService) GetPorts() ([]int, error) {
+	return []int{}, nil
+}
+
+// GetTags returns the container's tags
+func (s *DockerService) GetTags() ([]string, error) {
+	return []string{}, nil
+}
+
+// GetPid inspect the container an return its pid
+func (s *DockerService) GetPid() (int, error) {
+	// create container type from docker util, and call inspect on it
+	c := docker.Container{ID: string(s.ID)}
+	cj, err := c.Inspect(false)
+	if err != nil {
+		return -1, err
+	}
+
+	return cj.State.Pid, nil
+}
+
+// GetADIdentifiers return the container's AD identifiers
+func (s *DockerService) GetADIdentifiers() ([]string, error) {
+	return []string{}, nil
+}
