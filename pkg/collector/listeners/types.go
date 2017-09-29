@@ -5,18 +5,34 @@
 
 package listeners
 
+import (
+	"github.com/DataDog/datadog-agent/pkg/util/docker"
+)
+
 // ID is the representation of the unique ID of a Service
 type ID string
 
-// Service reprensents an application we can run a check against.
+// DockerService reprensents an application we can run a check against.
 // It should be matched with a check template by the ConfigResolver using the
 // ADIdentifiers field.
-type Service struct {
+type DockerService struct {
 	ID            ID                // unique ID
 	ADIdentifiers []string          // identifiers on which templates will be matched
 	Hosts         map[string]string // network --> IP address
 	Ports         []int
 	Tags          []string
+	Pid           int // Process identifier
+	container     docker.Container
+}
+
+// Service is an interface to get
+type Service interface {
+	GetID() ID
+	GetADIdentifiers() ([]string, error)
+	GetHosts() (map[string]string, error)
+	GetPorts() ([]int, error)
+	GetTags() ([]string, error)
+	GetPid() (int, error)
 }
 
 // ServiceListener monitors running services and triggers check (un)scheduling
