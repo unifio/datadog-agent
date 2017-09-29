@@ -12,7 +12,7 @@ import (
 // ID is the representation of the unique ID of a Service
 type ID string
 
-// DockerService reprensents an application we can run a check against.
+// DockerService reprensents a docker container we can run (a) check(s) against.
 // It should be matched with a check template by the ConfigResolver using the
 // ADIdentifiers field.
 type DockerService struct {
