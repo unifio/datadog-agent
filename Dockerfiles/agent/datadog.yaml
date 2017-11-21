@@ -1,3 +1,4 @@
 # Autodiscovery
 listeners:
   - name: docker
+  - name: kubelet
