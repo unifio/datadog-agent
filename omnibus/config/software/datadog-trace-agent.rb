@@ -33,5 +33,5 @@ build do
   command "go get github.com/Masterminds/glide", :env => env
   command "glide install", :env => env
   command "rake build", :env => env
-  copy trace_agent_binary, "#{install_dir}/embedded/bin"
+  copy trace_agent_binary, "#{install_dir}/bin/agent/"
 end

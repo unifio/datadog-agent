@@ -1,0 +1,15 @@
+[Unit]
+Description="Datadog Agent"
+Requisite=datadog-agent.service
+After=network.target datadog-agent.target
+PartOf=datadog-agent.service
+
+[Service]
+Type=simple
+PIDFile=<%= install_dir %>/run/trace-agent.pid
+User=dd-agent
+Restart=on-failure
+ExecStart=<%= install_dir %>/bin/agent/trace-agent --config <%= etc_dir %>/trace_agent.conf --pid <%= install_dir %>/run/trace-agent.pid
+
+[Install]
+WantedBy=multi-user.target

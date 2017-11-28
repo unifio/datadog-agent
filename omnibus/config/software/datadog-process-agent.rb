@@ -18,5 +18,5 @@ build do
   # fetch the binary and move to install_dir
   command "curl -f #{binary_url} -o #{binary}"
   command "chmod +x #{binary}"
-  move binary, "#{install_dir}/embedded/bin/process-agent"
+  move binary, "#{install_dir}/bin/agent/process-agent"
 end
