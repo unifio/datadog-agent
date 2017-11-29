@@ -4,6 +4,7 @@
 // Copyright 2017 Datadog, Inc.
 
 // +build apm
+// +build windows !linux
 
 package embed
 
