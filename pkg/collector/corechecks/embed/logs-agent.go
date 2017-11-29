@@ -4,6 +4,7 @@
 // Copyright 2017 Datadog, Inc.
 
 // +build log
+// +build !linux
 
 package embed
 
