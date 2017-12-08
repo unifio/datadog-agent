@@ -3,6 +3,7 @@ stages:
   - binary_build
   - integration_test
   - package_build
+  - dd_agent_testing
   - image_build
   - image_deploy
   - deploy
@@ -301,6 +302,24 @@ dogstatsd_suse-x64:
     paths:
       - $OMNIBUS_PACKAGE_DIR_SUSE
 
+
+# run dd-agent-testing
+dd_agent_testing:
+  stage: dd_agent_testing
+  image: 486234852809.dkr.ecr.us-east-1.amazonaws.com/datadog-agent-builders/dd-agent-testing:latest
+  only:
+    - master
+    - greg/testkitchen
+    - tags
+  tags: [ "runner:main", "size:large" ]
+  script:
+    - inv -e dd-agent-testing.upload
+    - inv -e dd-agent-testing.run
+    - inv -e dd-agent-testing.cleanup
+  artifacts:
+    expire_in: 2 weeks
+    paths:
+      - test/kitchen/.kitchen/logs
 #
 # image_build
 #
