@@ -1,0 +1,31 @@
+source 'https://rubygems.org'
+gem "berkshelf"
+gem "chef"
+gem "rake"
+
+group :development do
+  gem "travis-lint"
+  gem "guard"
+  gem "guard-foodcritic"
+  gem "guard-rspec"
+end
+
+group :test do
+  gem "tailor" # Ruby style
+  gem "foodcritic" # Lint testing
+end
+
+gem "test-kitchen", :group => [:vagrant, :digitalocean, :azure]
+
+group :vagrant do
+  gem 'kitchen-vagrant'
+end
+
+group :digitalocean do
+  gem "kitchen-digitalocean", '~> 0.9.8'
+  gem "droplet_kit"
+end
+
+group :azure do
+  gem "kitchen-azurerm", '~> 0.12.4'
+end
