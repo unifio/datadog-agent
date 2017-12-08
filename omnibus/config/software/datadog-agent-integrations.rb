@@ -46,6 +46,7 @@ build do
     # FIX THIS these dependencies have to be grabbed from somewhere
     all_reqs_file.puts "requests==2.11.1"
     all_reqs_file.puts "pympler==0.5"
+    all_reqs_file.puts "wheel==0.30.0"
 
     all_reqs_file.close
 
