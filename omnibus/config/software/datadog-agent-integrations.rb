@@ -18,11 +18,11 @@ integrations_core_branch = ENV['INTEGRATIONS_CORE_BRANCH']
 if integrations_core_branch.nil? || integrations_core_branch.empty?
   integrations_core_branch = 'master'
 end
-default_version trace_agent_branch
+default_version integrations_core_branch
 
 integrations_core_wheels = ENV['INTEGRATIONS_CORE_WHEELS']
 if integrations_core_wheels.nil? || integrations_core_wheels.empty?
-  integrations_core_wheels = true 
+  integrations_core_wheels = integrations_core_wheels.downcase != 'false'
 else
   integrations_core_wheels = false
 end
