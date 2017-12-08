@@ -81,18 +81,19 @@ build do
     Dir.glob("#{project_dir}/*").each do |check_dir|
       check = check_dir.split('/').last
 
-      next if blacklist.include? check
+      next if !File.directory?("#{check_dir}") || blacklist.include?(check)
+      next if !File.file?("#{check_dir}/setup.py")
 
       if windows?
-        command "#{windows_safe_path(install_dir)}\\embedded\\scripts\\pip.exe #{build_args}", :cwd => "#{project_dir}\\#{check_dir}"
-        command "#{windows_safe_path(install_dir)}\\embedded\\scripts\\pip.exe #{install_args}", :cwd => "#{project_dir}\\#{check_dir}"
+        command "#{windows_safe_path(install_dir)}\\embedded\\scripts\\pip.exe #{build_args}", :cwd => "#{project_dir}\\#{check}"
+        command "#{windows_safe_path(install_dir)}\\embedded\\scripts\\pip.exe #{install_args}", :cwd => "#{project_dir}\\#{check}"
       else
         build_env = {
           "LD_RUN_PATH" => "#{install_dir}/embedded/lib",
           "PATH" => "#{install_dir}/embedded/bin:#{ENV['PATH']}",
         }
-        pip "wheel --no-deps .", :env => build_env, :cwd => "#{project_dir}/#{check_dir}"
-        pip "install *.whl", :env => build_env, :cwd => "#{project_dir}/#{check_dir}"
+        pip "wheel --no-deps .", :env => build_env, :cwd => "#{project_dir}/#{check}"
+        pip "install *.whl", :env => build_env, :cwd => "#{project_dir}/#{check}"
       end
     end
   end
