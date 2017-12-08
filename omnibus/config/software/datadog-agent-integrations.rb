@@ -82,8 +82,17 @@ build do
       check = check_dir.split('/').last
 
       next if !File.directory?("#{check_dir}") || blacklist.include?(check)
-      next if !File.file?("#{check_dir}/setup.py")
 
+      # If there is no manifest file, then we should assume the folder does not
+      # contain a working check and move onto the next
+      File.file?(manifest_file_path) || next
+
+      manifest = JSON.parse(File.read(manifest_file_path))
+      manifest['supported_os'].include?(os) || next
+
+      # TODO: copy configuration stuff
+
+      File.file?("#{check_dir}/setup.py") || next
       if windows?
         command "#{windows_safe_path(install_dir)}\\embedded\\scripts\\pip.exe #{build_args}", :cwd => "#{project_dir}\\#{check}"
         command "#{windows_safe_path(install_dir)}\\embedded\\scripts\\pip.exe #{install_args}", :cwd => "#{project_dir}\\#{check}"
