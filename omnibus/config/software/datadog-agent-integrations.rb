@@ -20,12 +20,6 @@ if integrations_core_branch.nil? || integrations_core_branch.empty?
 end
 default_version integrations_core_branch
 
-integrations_core_wheels = ENV['INTEGRATIONS_CORE_WHEELS']
-if integrations_core_wheels.nil? || integrations_core_wheels.empty?
-  integrations_core_wheels = integrations_core_wheels.downcase != 'false'
-else
-  integrations_core_wheels = false
-end
 
 blacklist = [
   'datadog-base',  # namespacing package for wheels (NOT AN INTEGRATION)
@@ -47,6 +41,13 @@ build do
 
   # Copy the checks and generate the global requirements file
   block do
+    integrations_core_wheels = ENV['INTEGRATIONS_CORE_WHEELS']
+    if integrations_core_wheels.nil? || integrations_core_wheels.empty?
+      integrations_core_wheels = integrations_core_wheels.downcase != 'false'
+    else
+      integrations_core_wheels = false
+    end
+
     if integrations_core_wheels
       if windows?
         build_args = "wheel --no-deps ."
@@ -140,19 +141,19 @@ build do
     all_reqs_file.puts "pympler==0.5"
 
     all_reqs_file.close
-  end
 
-  # Install all the requirements
-  if windows?
-    pip_args = "install  -r #{project_dir}/check_requirements.txt"
-    command "#{windows_safe_path(install_dir)}\\embedded\\scripts\\pip.exe #{pip_args}"
-  else
-    build_env = {
-      "LD_RUN_PATH" => "#{install_dir}/embedded/lib",
-      "PATH" => "#{install_dir}/embedded/bin:#{ENV['PATH']}",
-    }
-    pip "install -r #{project_dir}/check_requirements.txt", :env => build_env
-  end
+    # Install all the requirements
+    if windows?
+      pip_args = "install  -r #{project_dir}/check_requirements.txt"
+      command "#{windows_safe_path(install_dir)}\\embedded\\scripts\\pip.exe #{pip_args}"
+    else
+      build_env = {
+        "LD_RUN_PATH" => "#{install_dir}/embedded/lib",
+        "PATH" => "#{install_dir}/embedded/bin:#{ENV['PATH']}",
+      }
+      pip "install -r #{project_dir}/check_requirements.txt", :env => build_env
+    end
 
-  move "#{project_dir}/check_requirements.txt", "#{install_dir}/agent/"
+    move "#{project_dir}/check_requirements.txt", "#{install_dir}/agent/"
+  end
 end
