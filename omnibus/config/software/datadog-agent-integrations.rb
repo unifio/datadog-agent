@@ -94,8 +94,8 @@ build do
         manifest['supported_os'].include?(os) || next
 
         # Copy the checks over
-        if File.exist? "#{check_dir}/check.py"
-          copy "#{check_dir}/check.py", "#{checks_dir}/#{check}.py"
+        if File.exist? "#{check_dir}/datadog/#{check_dir}/#{check}.py"
+          copy "#{check_dir}/datadog/#{check_dir}/#{check}.py", "#{checks_dir}/#{check}.py"
         end
 
         check_conf_dir = "#{conf_dir}/#{check}.d"
