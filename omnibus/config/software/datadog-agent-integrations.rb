@@ -85,6 +85,7 @@ build do
 
       # If there is no manifest file, then we should assume the folder does not
       # contain a working check and move onto the next
+      manifest_file_path = "#{check_dir}/manifest.json"
       File.file?(manifest_file_path) || next
 
       manifest = JSON.parse(File.read(manifest_file_path))
