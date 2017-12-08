@@ -394,6 +394,7 @@ dd_agent_testing:
   tags: [ "runner:main", "size:large" ]
   script:
     - cd $DD_AGENT_TESTING_DIR
+    - cp .kitchen-azure.yml .kitchen.yml
     - bash -l tasks/testall.sh
   artifacts:
     expire_in: 2 weeks

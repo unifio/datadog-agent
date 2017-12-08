@@ -33,23 +33,6 @@ def generate_test_and_parallel_test(name, description, shell_command, driver, de
   end
 end
 
-generate_test_and_parallel_test(
-  :"dd-agent",
-  'Run test for all of the Agent installation method on every platform',
-  "kitchen test",
-  "vagrant",
-  "passing"
-)
-
-# When run on Digital Ocean, always destroy all instances
-generate_test_and_parallel_test(
-  :"dd-agent",
-  'Run test for all of the Agent installation method on every platform',
-  "kitchen test",
-  "digitalocean",
-  "always"
-)
-
 # When run on Digital Ocean, always destroy all instances
 generate_test_and_parallel_test(
   :"dd-agent",

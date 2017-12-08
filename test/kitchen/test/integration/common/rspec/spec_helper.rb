@@ -3,25 +3,43 @@ require 'open-uri'
 require 'rspec'
 
 def stop
-  system('sudo /etc/init.d/datadog-agent stop > /dev/null')
+  if has_systemctl
+    system('sudo systemctl stop datadog-agent.service')
+  else
+    system('initctl stop datadog-agent')
+  end
 end
 
 def start
-  system('sudo /etc/init.d/datadog-agent start > /dev/null')
+  if has_systemctl
+    system('sudo systemctl start datadog-agent.service')
+  else
+    system('initctl start datadog-agent')
+  end
 end
 
 def restart
-  # On systems that have systemctl, we assume that systemd is used to run supervisor
-  # so give some time for the agent processes to start up
-  system('sudo /etc/init.d/datadog-agent restart > /dev/null && (command -v systemctl 2>&1 > /dev/null && sleep 10 || true)')
+  if has_systemctl
+    system('sudo systemctl restart datadog-agent.service && sleep 10')
+  else
+    system('initctl restart datadog-agent')
+  end
+end
+
+def has_systemctl
+  system('command -v systemctl 2>&1 > /dev/null')
 end
 
 def info
-  `sudo /etc/init.d/datadog-agent info`
+  `datadog-agent status`
 end
 
 def status
-  system('sudo /etc/init.d/datadog-agent status > /dev/null')
+  if has_systemctl
+    system('sudo systemctl status datadog-agent.service')
+  else
+    system('initctl status datadog-agent')
+  end
 end
 
 def agent_processes_running?
@@ -35,12 +53,8 @@ def process_running(name, user)
   system("pgrep", "-u", user, "-f", name, :out => File::NULL)
 end
 
-def supervisord_process_running(user)
-  process_running('bin/supervisord', user)
-end
-
-def collector_process_running(user)
-  process_running('agent/agent.py', user)
+def agent_process_running(user)
+  process_running('agent/agent start', user)
 end
 
 def trace_agent_process_running(user)
@@ -48,7 +62,7 @@ def trace_agent_process_running(user)
 end
 
 def read_agent_file(path, commit_hash)
-  open("https://raw.githubusercontent.com/DataDog/dd-agent/#{commit_hash}/#{path}").read()
+  open("https://raw.githubusercontent.com/DataDog/datadog-agent/#{commit_hash}/#{path}").read()
 end
 
 # Hash of the commit the Agent was built from
@@ -91,37 +105,40 @@ shared_examples_for 'Agent' do
 end
 
 shared_examples_for "an installed Agent" do
-  describe 'with pip dependencies' do
-    before(:all) do
-      @shipped_deps = read_requirements(pip_freeze)
-    end
+  # FIXME: get these to work with A6
+  # describe 'with pip dependencies' do
+  #   before(:all) do
+  #     @shipped_deps = read_requirements(pip_freeze)
+  #   end
+  #
+  #   it 'ships all the pip dependencies defined in requirements.txt with the correct versions' do
+  #     expected_deps = read_requirements(read_agent_file('requirements.txt', agent_git_hash))
+  #
+  #     expect(expected_deps.length).to be > 0
+  #     expected_deps.to_a.each do |dep|
+  #       expect(@shipped_deps.to_a).to include dep
+  #     end
+  #   end
+  #
+  #   # FIXME: We ignore pycurl for now since the versions shipped on Windows and Unix differ
+  #   it 'ships some of the pip dependencies defined in requirements-opt.txt with the correct versions'  do
+  #     expected_opt_deps = read_requirements(read_agent_file('requirements-opt.txt', agent_git_hash))
+  #
+  #     expect(expected_opt_deps.length).to be > 0
+  #     expected_opt_deps.each do |dep_name, dep_version|
+  #       if @shipped_deps.include? dep_name && dep_name != 'pycurl'
+  #         expect(@shipped_deps[dep_name]).to be == dep_version, "expected #{dep_name}==#{dep_version}, got #{@shipped_deps[dep_name]}"
+  #       end
+  #     end
+  #   end
+  #
+  # end
 
-    it 'ships all the pip dependencies defined in requirements.txt with the correct versions' do
-      expected_deps = read_requirements(read_agent_file('requirements.txt', agent_git_hash))
-
-      expect(expected_deps.length).to be > 0
-      expected_deps.to_a.each do |dep|
-        expect(@shipped_deps.to_a).to include dep
-      end
-    end
-
-    # FIXME: We ignore pycurl for now since the versions shipped on Windows and Unix differ
-    it 'ships some of the pip dependencies defined in requirements-opt.txt with the correct versions'  do
-      expected_opt_deps = read_requirements(read_agent_file('requirements-opt.txt', agent_git_hash))
-
-      expect(expected_opt_deps.length).to be > 0
-      expected_opt_deps.each do |dep_name, dep_version|
-        if @shipped_deps.include? dep_name && dep_name != 'pycurl'
-          expect(@shipped_deps[dep_name]).to be == dep_version, "expected #{dep_name}==#{dep_version}, got #{@shipped_deps[dep_name]}"
-        end
-      end
-    end
-  end
 end
 
 shared_examples_for "a running Agent with no errors" do
   it 'has an agent binary' do
-    expect(File).to exist('/usr/bin/dd-agent')
+    expect(File).to exist('/usr/bin/datadog-agent')
   end
 
   it 'has a trace-agent binary'  do
@@ -133,7 +150,7 @@ shared_examples_for "a running Agent with no errors" do
   end
 
   it 'has a config file' do
-    expect(File).to exist('/etc/dd-agent/datadog.conf')
+    expect(File).to exist('/etc/datadog-agent/datadog.yaml')
   end
 
   it 'has "OK" in the info command' do
@@ -156,7 +173,7 @@ shared_examples_for "a running Agent with no errors" do
   end
 
   it 'is not bound to the port that receives traces when apm_enabled is set to false' do
-    system('sudo sh -c \'sed -i "/^api_key: .*/a apm_enabled: false" /etc/dd-agent/datadog.conf\'')
+    system('sudo sh -c \'sed -i "/^api_key: .*/a apm_enabled: false" /etc/datadog-agent/datadog.yaml\'')
     expect(restart).to be_truthy
     system 'command -v systemctl 2>&1 > /dev/null || sleep 5 || true'
     expect(is_port_bound(8126)).to be_falsey
@@ -202,81 +219,6 @@ shared_examples_for 'an Agent that restarts' do
   end
 end
 
-shared_examples_for 'an Agent that runs under different users' do
-  before(:all) do
-    # On systems with systemd, we have to make sure that the datadog-agent service is run as root first
-    if File.exist? '/lib/systemd/system/datadog-agent.service'
-      system('sudo sed -i \'s/User=dd-agent/User=root/\' /lib/systemd/system/datadog-agent.service')
-      # reload only if the `systemctl` command exists
-      system('command -v systemctl 2>&1 > /dev/null && sudo systemctl daemon-reload')
-    end
-  end
-
-  describe 'with supervisord configured to run as root' do
-    before(:all) do
-      # replace user of supervisord in supervisor.conf to root
-      system('sudo sed -i \'/\\[supervisord\\]/,/\\[program:.*\\]/ s/user=dd-agent/user=root/\' /etc/dd-agent/supervisor.conf')
-    end
-
-    it 'restarts properly' do
-      expect(restart).to be_truthy
-      expect(status).to be_truthy
-    end
-
-    it 'runs supervisord as root' do
-      expect(supervisord_process_running('root')).to be_truthy
-      expect(supervisord_process_running('dd-agent')).to be_falsey
-    end
-
-    it 'runs the collector as dd-agent' do
-      expect(collector_process_running('root')).to be_falsey
-      expect(collector_process_running('dd-agent')).to be_truthy
-    end
-
-    after(:all) do
-      # revert changes to supervisor.conf
-      system('sudo sed -i \'s/user=root/user=dd-agent/\'  /etc/dd-agent/supervisor.conf')
-    end
-  end
-
-  describe 'with supervisord and the collector configured to run as root' do
-    before(:all) do
-      # replace user of supervisord and of the collector in supervisor.conf to root
-      system('sudo sed -i \'/\\[supervisord\\]/,/\\[program:.*\\]/ s/user=dd-agent/user=root/\' /etc/dd-agent/supervisor.conf')
-      system('sudo sed -i \'/\\[program:collector\\]/,/\\[program:.*\\]/ s/user=dd-agent/user=root/\' /etc/dd-agent/supervisor.conf')
-    end
-
-    it 'restarts properly' do
-      expect(restart).to be_truthy
-      expect(status).to be_truthy
-    end
-
-    it 'runs supervisord as root' do
-      expect(supervisord_process_running('root')).to be_truthy
-      expect(supervisord_process_running('dd-agent')).to be_falsey
-    end
-
-    it 'runs the collector as root' do
-      expect(collector_process_running('root')).to be_truthy
-      expect(collector_process_running('dd-agent')).to be_falsey
-    end
-
-    after(:all) do
-      # revert changes to supervisor.conf
-      system('sudo sed -i \'s/user=root/user=dd-agent/\' /etc/dd-agent/supervisor.conf')
-    end
-  end
-
-  after(:all) do
-    # Revert changes to the user which systemd runs the service as
-    if File.exist? '/lib/systemd/system/datadog-agent.service'
-      system('sudo sed -i \'s/User=root/User=dd-agent/\' /lib/systemd/system/datadog-agent.service')
-      # reload only if the `systemctl` command exists
-      system('command -v systemctl 2>&1 > /dev/null && sudo systemctl daemon-reload')
-    end
-  end
-end
-
 shared_examples_for 'an Agent that is removed' do
   it 'should remove the agent' do
     if system('which apt-get &> /dev/null')
@@ -294,7 +236,7 @@ shared_examples_for 'an Agent that is removed' do
   end
 
   it 'should remove the agent binary' do
-    expect(File).not_to exist('/usr/bin/dd-agent')
+    expect(File).not_to exist('/usr/bin/datadog-agent')
   end
 
   it 'should remove the trace-agent binary' do

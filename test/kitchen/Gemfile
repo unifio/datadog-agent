@@ -15,15 +15,10 @@ group :test do
   gem "foodcritic" # Lint testing
 end
 
-gem "test-kitchen", :group => [:vagrant, :digitalocean, :azure]
+gem "test-kitchen", :group => [:vagrant, :azure]
 
 group :vagrant do
   gem 'kitchen-vagrant'
-end
-
-group :digitalocean do
-  gem "kitchen-digitalocean", '~> 0.9.8'
-  gem "droplet_kit"
 end
 
 group :azure do
