@@ -41,41 +41,9 @@ build do
 
   # Copy the checks and generate the global requirements file
   block do
-
-    if windows?
-      build_args = "wheel --no-deps ."
-      install_args = "install *.whl"
-      command "#{windows_safe_path(install_dir)}\\embedded\\scripts\\pip.exe #{build_args}", :cwd => "#{project_dir}\\datadog-base"
-      command "#{windows_safe_path(install_dir)}\\embedded\\scripts\\pip.exe #{install_args}", :cwd => "#{project_dir}\\datadog-base"
-    else
-      build_env = {
-        "LD_RUN_PATH" => "#{install_dir}/embedded/lib",
-        "PATH" => "#{install_dir}/embedded/bin:#{ENV['PATH']}",
-      }
-      pip "wheel --no-deps .", :env => build_env, :cwd => "#{project_dir}/datadog-base"
-      pip "install *.whl", :env => build_env, :cwd => "#{project_dir}/datadog-base"
-    end
     all_reqs_file = File.open("#{project_dir}/check_requirements.txt", 'w+')
-
-    Dir.glob("#{project_dir}/*").each do |check_dir|
-      check = check_dir.split('/').last
-
-      next if blacklist.include? check
-
-      if windows?
-        command "#{windows_safe_path(install_dir)}\\embedded\\scripts\\pip.exe #{build_args}", :cwd => "#{project_dir}\\#{check_dir}"
-        command "#{windows_safe_path(install_dir)}\\embedded\\scripts\\pip.exe #{install_args}", :cwd => "#{project_dir}\\#{check_dir}"
-      else
-        build_env = {
-          "LD_RUN_PATH" => "#{install_dir}/embedded/lib",
-          "PATH" => "#{install_dir}/embedded/bin:#{ENV['PATH']}",
-        }
-        pip "wheel --no-deps .", :env => build_env, :cwd => "#{project_dir}/#{check_dir}"
-        pip "install *.whl", :env => build_env, :cwd => "#{project_dir}/#{check_dir}"
-      end
-    end
-
     # Manually add "core" dependencies that are not listed in the checks requirements
+    # FIX THIS these dependencies have to be grabbed from somewhere
     all_reqs_file.puts "requests==2.11.1"
     all_reqs_file.puts "pympler==0.5"
 
@@ -94,5 +62,37 @@ build do
     end
 
     move "#{project_dir}/check_requirements.txt", "#{install_dir}/agent/"
+
+    if windows?
+      build_args = "wheel --no-deps ."
+      install_args = "install *.whl"
+      command "#{windows_safe_path(install_dir)}\\embedded\\scripts\\pip.exe #{build_args}", :cwd => "#{project_dir}\\datadog-base"
+      command "#{windows_safe_path(install_dir)}\\embedded\\scripts\\pip.exe #{install_args}", :cwd => "#{project_dir}\\datadog-base"
+    else
+      build_env = {
+        "LD_RUN_PATH" => "#{install_dir}/embedded/lib",
+        "PATH" => "#{install_dir}/embedded/bin:#{ENV['PATH']}",
+      }
+      pip "wheel --no-deps .", :env => build_env, :cwd => "#{project_dir}/datadog-base"
+      pip "install *.whl", :env => build_env, :cwd => "#{project_dir}/datadog-base"
+    end
+
+    Dir.glob("#{project_dir}/*").each do |check_dir|
+      check = check_dir.split('/').last
+
+      next if blacklist.include? check
+
+      if windows?
+        command "#{windows_safe_path(install_dir)}\\embedded\\scripts\\pip.exe #{build_args}", :cwd => "#{project_dir}\\#{check_dir}"
+        command "#{windows_safe_path(install_dir)}\\embedded\\scripts\\pip.exe #{install_args}", :cwd => "#{project_dir}\\#{check_dir}"
+      else
+        build_env = {
+          "LD_RUN_PATH" => "#{install_dir}/embedded/lib",
+          "PATH" => "#{install_dir}/embedded/bin:#{ENV['PATH']}",
+        }
+        pip "wheel --no-deps .", :env => build_env, :cwd => "#{project_dir}/#{check_dir}"
+        pip "install *.whl", :env => build_env, :cwd => "#{project_dir}/#{check_dir}"
+      end
+    end
   end
 end
